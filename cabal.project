@@ -5,5 +5,5 @@ package ghc-external-slices-plugin
   ghc-options: -Wall -Werror
 
 package test-pkg
-  -- ghc-options: -fplugin=Splices.Plugin -fplugin-opt=Splices.Plugin:save -fplugin-opt=Splices.Plugin:./
-  -- ghc-options: -fplugin=Splices.Plugin -fplugin-opt=Splices.Plugin:load -fplugin-opt=Splices.Plugin:./
+  -- ghc-options: -fplugin=Splices.Plugin -fplugin-opt=Splices.Plugin:save -fplugin-opt=Splices.Plugin:./foobar
+  -- ghc-options: -fplugin=Splices.Plugin -fplugin-opt=Splices.Plugin:load -fplugin-opt=Splices.Plugin:./foobar

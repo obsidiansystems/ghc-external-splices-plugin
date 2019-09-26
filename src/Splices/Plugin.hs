@@ -9,16 +9,15 @@ import TcSplice
 
 import Splices.Data
 
--- TODO:
---   - optimise this by figuring out a way to only
---     read/write the .hs-splice files once
---     (set up an IORef before updating the hook
+import System.Directory
+
 plugin :: Plugin
 plugin = defaultPlugin
   { dynflagsPlugin = \opts -> Just (registerHook opts) }
 
 registerHook :: [String] -> (DynFlags -> IO DynFlags)
 registerHook opts = \dflags -> do
+  createDirectoryIfMissing True (modeDir mode)
   return $ dflags
     { hooks = (hooks dflags)
       { runMetaHook = Just $ splicesHook mode defaultRunMeta }
@@ -106,6 +105,10 @@ readSpliceFor loc splicedata req =
 
 data Mode = Load FilePath | Save FilePath
   deriving (Eq, Show)
+
+modeDir :: Mode -> FilePath
+modeDir (Load d) = d
+modeDir (Save d) = d
 
 parseOpts :: [CommandLineOption] -> Mode
 parseOpts ["save", dir] = Save dir

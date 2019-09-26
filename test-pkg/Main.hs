@@ -9,4 +9,3 @@ data Foo = A Int | B Char
 
 main :: IO ()
 main = print $([|A 1|])
-

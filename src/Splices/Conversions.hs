@@ -205,7 +205,6 @@ parseUnitId' = parse
 --   non-cross-compiling GHC.
 findEquivalentModule :: Module -> RnM (Maybe Module)
 findEquivalentModule mdl = do
-  liftIO $ putStrLn ("Looking for equivalent to: " ++ unitIdStr)
   case parseUnitId' unitIdStr of
     Nothing -> return Nothing
     Just (pkg, ver, _mhash) -> do
@@ -219,10 +218,6 @@ lookFor pkg ver = do
   dflags <- getDynFlags
   let pkgid = mkFastString (pkg ++ "-" ++ ver)
       pkgs = searchPackageId dflags (SourcePackageId pkgid)
-  liftIO $ putStrLn ("Looking for: " ++ pkg ++ "-" ++ ver)
-  liftIO . putStrLn . unwords $
-    [ "Found", show (length pkgs), "pkgs:" ] ++
-    [ unitIdString (packageConfigId p) | p <- pkgs ]
   if null pkgs then pure Nothing else pure (Just $ packageConfigId (head pkgs))
 
 deriving instance Foldable HsMatchContext

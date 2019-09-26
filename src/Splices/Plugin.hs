@@ -1,31 +1,33 @@
 module Splices.Plugin where
 
 import GhcPlugins
-import Hooks
 import GHC.Hs.Expr
 import GHC.Hs.Extension
+import Hooks
 import TcRnTypes
 import TcSplice
 
 import Splices.Data
 
 -- TODO:
---   - change GHC patch to expose a "dynflags plugin" slot
---     instead of a "hooks plugin" one
 --   - optimise this by figuring out a way to only
 --     read/write the .hs-splice files once
---     (MVar/TVar + unsafePerformIO?)
+--     (set up an IORef before updating the hook
 plugin :: Plugin
-plugin = defaultPlugin { hooksPlugin = hooksP }
+plugin = defaultPlugin
+  { dynflagsPlugin = \opts -> Just (registerHook opts) }
 
-hooksP :: [CommandLineOption] -> Maybe (Hooks -> Hooks)
-hooksP opts = Just $ \h ->
-  h { runMetaHook = Just $ splicesHook mode defaultRunMeta }
+registerHook :: [String] -> (DynFlags -> IO DynFlags)
+registerHook opts = \dflags -> do
+  return $ dflags
+    { hooks = (hooks dflags)
+      { runMetaHook = Just $ splicesHook mode defaultRunMeta }
+    }
 
   where mode = parseOpts opts
 
 splicesHook :: Mode -> MetaHook TcM -> MetaHook TcM
-splicesHook mode metaHook req e = liftIO (print mode) >> case mode of
+splicesHook mode metaHook req e = case mode of
   Load dir -> load dir
   Save dir
     | isAW req  -> metaHook req e

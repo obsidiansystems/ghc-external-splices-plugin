@@ -4,6 +4,8 @@
 {-# LANGUAGE BangPatterns, UndecidableInstances #-}
 module Splices.Serialise.Class where
 
+import GhcPrelude
+
 import Binary
 import Control.Monad
 import Control.Monad.IO.Class

@@ -1,19 +1,33 @@
 module Splices.Plugin where
 
-import GhcPlugins
-import GHC.Hs.Expr
-import GHC.Hs.Extension
-import Hooks
-import TcRnTypes
-import TcSplice
+import GhcPrelude
+
+import System.Directory (createDirectoryIfMissing)
+
+import DynFlags (DynFlags, hooks)
+import GHC.Hs.Expr (LHsExpr)
+import GHC.Hs.Extension (GhcTc)
+import GHC.Serialized (toSerialized, serializeWithData)
+import Hooks (runMetaHook)
+import HscTypes (MetaRequest(..), MetaResult, MetaHook, metaRequestD, metaRequestE, metaRequestP, metaRequestT)
+import Module (getModule)
+import PlainPanic (panic)
+import Plugins (Plugin(..), PluginWithArgs(..), StaticPlugin(..), defaultPlugin, CommandLineOption)
+import SrcLoc (GenLocated(L), SrcSpan)
+import TcRnTypes (TcM)
+import TcSplice (defaultRunMeta)
 
 import Splices.Data
 
-import System.Directory
+staticPlugin :: StaticPlugin
+staticPlugin = StaticPlugin $ PluginWithArgs
+  { paPlugin = plugin
+  , paArguments = []
+  }
 
 plugin :: Plugin
 plugin = defaultPlugin
-  { dynflagsPlugin = \opts -> Just (registerHook opts) }
+  { dynflagsPlugin = registerHook }
 
 registerHook :: [String] -> (DynFlags -> IO DynFlags)
 registerHook opts = \dflags -> do

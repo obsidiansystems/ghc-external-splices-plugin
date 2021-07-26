@@ -3,6 +3,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Splices.Serialise.Instances where
 
+import GhcPrelude
+
 import Bag
 import BasicTypes
 import BooleanFormula

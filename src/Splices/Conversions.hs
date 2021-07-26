@@ -7,6 +7,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Splices.Conversions where
 
+import GhcPrelude
+
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Char (isDigit)

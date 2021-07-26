@@ -724,6 +724,9 @@ instance Serialise CostCentre where
 deriving instance Generic (HsBracket GhcPs)
 instance Serialise (HsBracket GhcPs)
 
+deriving instance Generic (StandaloneKindSig GhcPs)
+instance Serialise (StandaloneKindSig GhcPs)
+
 deriving instance Generic (HsDecl GhcPs)
 instance Serialise (HsDecl GhcPs)
 

@@ -3,6 +3,8 @@ module Splices.Plugin where
 import GhcPrelude
 
 import System.Directory (createDirectoryIfMissing)
+import System.Environment (lookupEnv)
+import Control.Applicative ((<|>))
 
 import DynFlags (DynFlags, hooks)
 import GHC.Hs.Expr (LHsExpr)
@@ -30,14 +32,19 @@ plugin = defaultPlugin
   { dynflagsPlugin = registerHook }
 
 registerHook :: [String] -> (DynFlags -> IO DynFlags)
-registerHook opts = \dflags -> do
-  createDirectoryIfMissing True (modeDir mode)
-  return $ dflags
-    { hooks = (hooks dflags)
-      { runMetaHook = Just $ splicesHook mode defaultRunMeta }
-    }
-
-  where mode = parseOpts opts
+registerHook _opts = \dflags -> do
+  mMode <- getModeEnvVar
+  case mMode of
+    Nothing -> do
+      putStrLn "!!! external-splices-plugin: Not splicing, no env var found"
+      return dflags
+    Just mode -> do
+      putStrLn $ "!!! external-splices-plugin: Found mode: " ++ show mode
+      createDirectoryIfMissing True (modeDir mode)
+      return $ dflags
+        { hooks = (hooks dflags)
+          { runMetaHook = Just $ splicesHook mode defaultRunMeta }
+        }
 
 splicesHook :: Mode -> MetaHook TcM -> MetaHook TcM
 splicesHook mode metaHook req e = case mode of
@@ -124,8 +131,8 @@ modeDir :: Mode -> FilePath
 modeDir (Load d) = d
 modeDir (Save d) = d
 
-parseOpts :: [CommandLineOption] -> Mode
-parseOpts ["save", dir] = Save dir
-parseOpts ["load", dir] = Load dir
-parseOpts opts = error $
-  "Splices.Plugin.parseOpts: unknown options " ++ show opts
+getModeEnvVar :: IO (Maybe Mode)
+getModeEnvVar = do
+  mSaveDir <- fmap Save <$> lookupEnv "EXTERNAL_SPLICES_SAVE"
+  mLoadDir <- fmap Load <$> lookupEnv "EXTERNAL_SPLICES_LOAD"
+  return $ mSaveDir <|> mLoadDir

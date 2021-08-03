@@ -69,6 +69,7 @@ writeHsSpliceData fp splicedata =
     bh <- liftIO $ Bin.openBinMem (100 * 1024)
     --  ^^^ FIXME: how should we compute an approximation of size?
     checkedConv $ putWithUserData' (debugTraceMsg dflags 3) bh splicedata sput
+    liftIO $ createDirectoryIfMissing True $ takeDirectory fp
     liftIO (Bin.writeBinMem bh fp)
 
 getModuleSplicesPath :: FilePath -> Module -> FilePath

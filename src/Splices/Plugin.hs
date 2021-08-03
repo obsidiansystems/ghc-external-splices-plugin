@@ -14,13 +14,15 @@ import Hooks (runMetaHook)
 import HscTypes (MetaRequest(..), MetaResult, MetaHook, metaRequestD, metaRequestE, metaRequestP, metaRequestT)
 import Module (getModule)
 import PlainPanic (panic)
-import Plugins (Plugin(..), PluginWithArgs(..), StaticPlugin(..), defaultPlugin, CommandLineOption)
+import Plugins (Plugin(..), PluginWithArgs(..), StaticPlugin(..), defaultPlugin, purePlugin)
 import SrcLoc (GenLocated(L), SrcSpan)
 import TcRnTypes (TcM)
 import TcSplice (defaultRunMeta)
 
 import Splices.Data
 
+-- This also requires patching GHC to ensure dynflagsPlugin is called for static
+-- plugins.
 staticPlugin :: StaticPlugin
 staticPlugin = StaticPlugin $ PluginWithArgs
   { paPlugin = plugin
@@ -29,17 +31,17 @@ staticPlugin = StaticPlugin $ PluginWithArgs
 
 plugin :: Plugin
 plugin = defaultPlugin
-  { dynflagsPlugin = registerHook }
+  { dynflagsPlugin = registerHook
+  , pluginRecompile = purePlugin
+  }
 
+-- Since this is used as a static plugin, we don't get passed args.
 registerHook :: [String] -> (DynFlags -> IO DynFlags)
 registerHook _opts = \dflags -> do
   mMode <- getModeEnvVar
   case mMode of
-    Nothing -> do
-      putStrLn "!!! external-splices-plugin: Not splicing, no env var found"
-      return dflags
+    Nothing -> return dflags
     Just mode -> do
-      putStrLn $ "!!! external-splices-plugin: Found mode: " ++ show mode
       createDirectoryIfMissing True (modeDir mode)
       return $ dflags
         { hooks = (hooks dflags)
